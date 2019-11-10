@@ -14,4 +14,7 @@ scp index.html styles.css main.js pi@<my Raspberry Pi's IP>:
 
 Developed with elm 0.19.1.
 
+The API used is: https://timetable.search.ch/api/help#stationboard
+
 ![Screenshot of departure table](screenshot.png)
+
