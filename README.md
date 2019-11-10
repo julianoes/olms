@@ -13,3 +13,5 @@ scp index.html styles.css main.js pi@<my Raspberry Pi's IP>:
 ```
 
 Developed with elm 0.19.1.
+
+![Screenshot of departure table](screenshot.png)
