@@ -107,17 +107,27 @@ viewTimetable model =
 renderTable : List Train -> Html msg
 renderTable lst =
     table []
-        (List.map toRow lst)
+        ([ thead
+            []
+            [ th [] []
+            , th [] []
+            , th [] [ text "Nach" ]
+            , th [] [ text "Gleis" ]
+            , th [] [ text "Hinweis" ]
+            ]
+         ]
+            ++ List.map toRow lst
+        )
 
 
 toRow : Train -> Html msg
 toRow t =
     tr []
-        [ td [] [ text (formatName t.abbreviation t.number) ]
-        , td [] [ text (formatTime t.departureTime) ]
-        , td [] [ text t.destination ]
-        , td [] [ text t.track ]
-        , td [] [ text (formatDelay t.delay) ]
+        [ td [ class "number" ] [ text (formatName t.abbreviation t.number) ]
+        , td [ class "time" ] [ text (formatTime t.departureTime) ]
+        , td [ class "destination" ] [ text t.destination ]
+        , td [ class "track" ] [ text t.track ]
+        , td [ class "delay" ] [ text (formatDelay t.delay) ]
         ]
 
 
@@ -153,7 +163,7 @@ formatDelay maybeDelay =
 getTimetable : Cmd Msg
 getTimetable =
     Http.get
-        { url = "http://transport.opendata.ch/v1/stationboard?id=Olten&limit=10"
+        { url = "http://transport.opendata.ch/v1/stationboard?id=Olten&limit=15"
         , expect = Http.expectJson GotTimetable timetableDecoder
         }
 
