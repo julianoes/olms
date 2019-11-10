@@ -1,4 +1,23 @@
-module Main exposing (Model(..), Msg(..), getTimetable, init, main, subscriptions, timetableDecoder, update, view, viewTimetable)
+module Main exposing
+    ( Model(..)
+    , Msg(..)
+    , Train
+    , TrainTable
+    , colorizeName
+    , formatNotes
+    , formatTime
+    , getTimetable
+    , init
+    , main
+    , renderTable
+    , sanitizeName
+    , subscriptions
+    , timetableDecoder
+    , toRow
+    , update
+    , view
+    , viewTimetable
+    )
 
 import Browser
 import Html exposing (..)
@@ -27,11 +46,11 @@ main =
 
 type alias Train =
     { abbreviation : String
-    , number : String
+    , number : Maybe String
     , departureTime : String
     , destination : String
     , track : String
-    , delay : Maybe String
+    , notes : Maybe String
     }
 
 
@@ -123,17 +142,28 @@ renderTable lst =
 toRow : Train -> Html msg
 toRow t =
     tr []
-        [ td [ class "number" ] [ colorizeName (sanitizeName t.abbreviation t.number) ]
-        , td [ class "time" ] [ text (formatTime t.departureTime) ]
-        , td [ class "destination" ] [ text t.destination ]
-        , td [ class "track" ] [ text t.track ]
-        , td [ class "delay" ] [ text (formatDelay t.delay) ]
+        [ td [ class "number" ]
+            [ colorizeName
+                (sanitizeName t.abbreviation t.number)
+            ]
+        , td [ class "time" ]
+            [ formatTime t.departureTime
+            ]
+        , td [ class "destination" ]
+            [ text t.destination
+            ]
+        , td [ class "track" ]
+            [ formatTrack t.track
+            ]
+        , td [ class "notes" ]
+            [ formatNotes t.notes
+            ]
         ]
 
 
-formatTime : String -> String
+formatTime : String -> Html msg
 formatTime string =
-    String.slice 11 16 string
+    text (String.slice 11 16 string)
 
 
 colorizeName : String -> Html msg
@@ -155,24 +185,47 @@ colorizeName string =
         text string
 
 
-sanitizeName : String -> String -> String
-sanitizeName abbreviation number =
-    -- Sometimes the abbreviation comes with the number and is too long.
-    if String.startsWith abbreviation number then
-        abbreviation
-
-    else
-        abbreviation ++ number
-
-
-formatDelay : Maybe String -> String
-formatDelay maybeDelay =
-    case maybeDelay of
-        Just delay ->
-            delay
+sanitizeName : String -> Maybe String -> String
+sanitizeName abbreviation maybeNumber =
+    case maybeNumber of
+        Just number ->
+            abbreviation ++ " " ++ number
 
         Nothing ->
-            ""
+            abbreviation
+
+
+formatTrack : String -> Html msg
+formatTrack track =
+    if String.endsWith "!" track then
+        div [ class "yellow" ] [ text (String.slice 0 -1 track) ]
+
+    else
+        text track
+
+
+formatNotes : Maybe String -> Html msg
+formatNotes maybeNotes =
+    case maybeNotes of
+        Just notes ->
+            if notes == "X" then
+                text "Ausfall"
+
+            else if notes == "+0" then
+                text ""
+
+            else if String.startsWith "+" notes then
+                text
+                    ("ca. "
+                        ++ String.slice 1 (String.length notes) notes
+                        ++ " Min später"
+                    )
+
+            else
+                text notes
+
+        Nothing ->
+            text ""
 
 
 
@@ -182,21 +235,32 @@ formatDelay maybeDelay =
 getTimetable : Cmd Msg
 getTimetable =
     Http.get
-        { url = "http://transport.opendata.ch/v1/stationboard?id=Olten&limit=15"
+        { url =
+            "https://timetable.search.ch/api/stationboard.json"
+                ++ "?stop=Olten"
+                ++ "&show_delays=1"
+                ++ "&show_trackchanges=1"
+                ++ "&show_tracks=1&limit=16"
         , expect = Http.expectJson GotTimetable timetableDecoder
         }
 
 
 timetableDecoder : Json.Decode.Decoder TrainTable
 timetableDecoder =
-    Json.Decode.field "stationboard"
+    Json.Decode.field "connections"
         (Json.Decode.list
             (Json.Decode.map6 Train
-                (Json.Decode.field "category" Json.Decode.string)
-                (Json.Decode.field "number" Json.Decode.string)
-                (Json.Decode.field "stop" (Json.Decode.field "departure" Json.Decode.string))
-                (Json.Decode.field "to" Json.Decode.string)
-                (Json.Decode.field "stop" (Json.Decode.field "platform" Json.Decode.string))
-                (Json.Decode.maybe (Json.Decode.field "stop" (Json.Decode.field "delay" Json.Decode.string)))
+                (Json.Decode.field "*G" Json.Decode.string)
+                (Json.Decode.maybe
+                    (Json.Decode.field "*L" Json.Decode.string)
+                )
+                (Json.Decode.field "time" Json.Decode.string)
+                (Json.Decode.field "terminal"
+                    (Json.Decode.field "name" Json.Decode.string)
+                )
+                (Json.Decode.field "track" Json.Decode.string)
+                (Json.Decode.maybe
+                    (Json.Decode.field "dep_delay" Json.Decode.string)
+                )
             )
         )

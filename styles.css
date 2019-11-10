@@ -32,7 +32,7 @@ table thead {
 }
 
 table td.number {
-    width: 1.5em;
+    width: 3.5em;
     font-weight: bold;
 }
 
@@ -48,8 +48,9 @@ table td.track {
     width: 3em;
 }
 
-table td.delay {
+table td.notes {
     width: 8em;
+    color: rgb(247, 181, 0);
 }
 
 div.ic {
@@ -72,3 +73,8 @@ div.s {
     display: inline-block;
     min-width: 3em;
 }
+
+div.yellow {
+    color: rgb(247, 181, 0);
+}
+
