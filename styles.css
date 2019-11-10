@@ -1,6 +1,7 @@
 body {
     width: 100%;
     text-align: center;
+    overflow: hidden;
     background-color: rgb(45, 50, 125, 255);
     color: rgb(255, 255, 255);
     margin-left: 1%;
