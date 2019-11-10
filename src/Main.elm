@@ -27,6 +27,7 @@ main =
 
 type alias Train =
     { abbreviation : String
+    , number : String
     , departureTime : String
     , destination : String
     , track : String
@@ -112,12 +113,27 @@ renderTable lst =
 toRow : Train -> Html msg
 toRow t =
     tr []
-        [ td [] [ text t.abbreviation ]
-        , td [] [ text t.departureTime ]
+        [ td [] [ text (formatName t.abbreviation t.number) ]
+        , td [] [ text (formatTime t.departureTime) ]
         , td [] [ text t.destination ]
         , td [] [ text t.track ]
         , td [] [ text (formatDelay t.delay) ]
         ]
+
+
+formatTime : String -> String
+formatTime string =
+    String.slice 11 16 string
+
+
+formatName : String -> String -> String
+formatName abbreviation number =
+    -- Sometimes the abbreviation comes with the number
+    if String.startsWith abbreviation number then
+        number
+
+    else
+        abbreviation ++ " " ++ number
 
 
 formatDelay : Maybe String -> String
@@ -146,8 +162,9 @@ timetableDecoder : Json.Decode.Decoder TrainTable
 timetableDecoder =
     Json.Decode.field "stationboard"
         (Json.Decode.list
-            (Json.Decode.map5 Train
-                (Json.Decode.field "name" Json.Decode.string)
+            (Json.Decode.map6 Train
+                (Json.Decode.field "category" Json.Decode.string)
+                (Json.Decode.field "number" Json.Decode.string)
                 (Json.Decode.field "stop" (Json.Decode.field "departure" Json.Decode.string))
                 (Json.Decode.field "to" Json.Decode.string)
                 (Json.Decode.field "stop" (Json.Decode.field "platform" Json.Decode.string))
