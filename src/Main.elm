@@ -211,9 +211,13 @@ formatDestinations destinations =
 subsampleDestinations : List String -> List String
 subsampleDestinations destinations =
     -- We take the next two stations plus the final destination.
-    Maybe.map List.singleton (myLast destinations)
-        |> Maybe.withDefault []
-        |> (++) (List.take 2 destinations)
+    if List.length destinations <= 3 then
+        destinations
+
+    else
+        Maybe.map List.singleton (myLast destinations)
+            |> Maybe.withDefault []
+            |> (++) (List.take 2 destinations)
 
 
 filterDestinations : List String -> List String
