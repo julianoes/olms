@@ -49,7 +49,7 @@ main =
 
 
 type alias Train =
-    { abbreviation : String
+    { abbreviation : Maybe String
     , number : Maybe String
     , departureTime : String
     , destinations : List String
@@ -192,14 +192,20 @@ colorizeName string =
         text string
 
 
-sanitizeName : String -> Maybe String -> String
-sanitizeName abbreviation maybeNumber =
-    case maybeNumber of
-        Just number ->
+sanitizeName : Maybe String -> Maybe String -> String
+sanitizeName maybeAbbreviation maybeNumber =
+    case ( maybeAbbreviation, maybeNumber ) of
+        ( Just abbreviation, Just number ) ->
             abbreviation ++ " " ++ number
 
-        Nothing ->
+        ( Just abbreviation, Nothing ) ->
             abbreviation
+
+        ( Nothing, Just number ) ->
+            number
+
+        ( Nothing, Nothing ) ->
+            ""
 
 
 formatDestinations : List String -> Html msg
@@ -303,7 +309,9 @@ timetableDecoder =
     Json.Decode.field "connections"
         (Json.Decode.list
             (Json.Decode.map6 Train
-                (Json.Decode.field "*G" Json.Decode.string)
+                (Json.Decode.maybe
+                    (Json.Decode.field "*G" Json.Decode.string)
+                )
                 (Json.Decode.maybe
                     (Json.Decode.field "*L" Json.Decode.string)
                 )
