@@ -123,7 +123,7 @@ renderTable lst =
 toRow : Train -> Html msg
 toRow t =
     tr []
-        [ td [ class "number" ] [ text (formatName t.abbreviation t.number) ]
+        [ td [ class "number" ] [ colorizeName (sanitizeName t.abbreviation t.number) ]
         , td [ class "time" ] [ text (formatTime t.departureTime) ]
         , td [ class "destination" ] [ text t.destination ]
         , td [ class "track" ] [ text t.track ]
@@ -136,14 +136,33 @@ formatTime string =
     String.slice 11 16 string
 
 
-formatName : String -> String -> String
-formatName abbreviation number =
-    -- Sometimes the abbreviation comes with the number
-    if String.startsWith abbreviation number then
-        number
+colorizeName : String -> Html msg
+colorizeName string =
+    if
+        String.startsWith "IC" string
+            || String.startsWith "IR" string
+            || String.startsWith "EC" string
+    then
+        div [ class "ic" ] [ text string ]
+
+    else if String.startsWith "R" string then
+        div [ class "r" ] [ text string ]
+
+    else if String.startsWith "S" string then
+        div [ class "s" ] [ text string ]
 
     else
-        abbreviation ++ " " ++ number
+        text string
+
+
+sanitizeName : String -> String -> String
+sanitizeName abbreviation number =
+    -- Sometimes the abbreviation comes with the number and is too long.
+    if String.startsWith abbreviation number then
+        abbreviation
+
+    else
+        abbreviation ++ number
 
 
 formatDelay : Maybe String -> String

@@ -20,8 +20,13 @@ table {
 }
 
 table tr {
-    border-top: 1px solid #ffffff;
-    border-bottom: 1px solid #ffffff;
+    border-top: 1px solid rgb(255, 255, 255);
+    border-bottom: 1px solid rgb(255, 255, 255);
+}
+
+table tr td {
+    padding-top: 3px;
+    padding-bottom: 3px;
 }
 
 table thead {
@@ -30,7 +35,8 @@ table thead {
 }
 
 table td.number {
-    width: 5em;
+    width: 1.5em;
+    font-weight: bold;
 }
 
 table td.time {
@@ -47,4 +53,25 @@ table td.track {
 
 table td.delay {
     width: 8em;
+}
+
+div.ic {
+    background-color: rgb(255, 0, 0);
+    font-style:italic;
+    display: inline-block;
+    min-width: 3em;
+}
+
+div.r {
+    color: rgb(255, 0, 0);
+    background-color: rgb(255, 255, 255);
+    display: inline-block;
+    min-width: 3em;
+}
+
+div.s {
+    color: rgb(0, 0, 0);
+    background-color: rgb(255, 255, 255);
+    display: inline-block;
+    min-width: 3em;
 }
