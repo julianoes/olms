@@ -100,13 +100,24 @@ viewTimetable model =
             div [] [ text "Loading..." ]
 
         Success traintable ->
-            div [] [ renderList traintable ]
+            div [] [ renderTable traintable ]
 
 
-renderList : List Train -> Html msg
-renderList lst =
-    ul []
-        (List.map (\l -> li [] [ text (l.abbreviation ++ ", " ++ l.departureTime ++ ", " ++ l.destination ++ ", " ++ l.track ++ ", " ++ formatDelay l.delay) ]) lst)
+renderTable : List Train -> Html msg
+renderTable lst =
+    table []
+        (List.map
+            (\l ->
+                tr []
+                    [ td [] [ text l.abbreviation ]
+                    , td [] [ text l.departureTime ]
+                    , td [] [ text l.destination ]
+                    , td [] [ text l.track ]
+                    , td [] [ text (formatDelay l.delay) ]
+                    ]
+            )
+            lst
+        )
 
 
 formatDelay : Maybe String -> String
