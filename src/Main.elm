@@ -26,10 +26,11 @@ main =
 
 
 type alias Train =
-    { departureTime : String
-    , delay : Maybe String
-    , abbreviation : String
+    { abbreviation : String
+    , departureTime : String
     , destination : String
+    , track : String
+    , delay : Maybe String
     }
 
 
@@ -105,7 +106,7 @@ viewTimetable model =
 renderList : List Train -> Html msg
 renderList lst =
     ul []
-        (List.map (\l -> li [] [ text (l.departureTime ++ ", " ++ formatDelay l.delay ++ ", " ++ l.abbreviation ++ ", " ++ l.destination) ]) lst)
+        (List.map (\l -> li [] [ text (l.abbreviation ++ ", " ++ l.departureTime ++ ", " ++ l.destination ++ ", " ++ l.track ++ ", " ++ formatDelay l.delay) ]) lst)
 
 
 formatDelay : Maybe String -> String
@@ -125,19 +126,20 @@ formatDelay maybeDelay =
 getTimetable : Cmd Msg
 getTimetable =
     Http.get
-        { url = "https://timetable.search.ch/api/stationboard.json?stop=Olten&show_delays=1&limit=10"
+        { url = "http://transport.opendata.ch/v1/stationboard?id=Olten&limit=10"
         , expect = Http.expectJson GotTimetable timetableDecoder
         }
 
 
 timetableDecoder : Json.Decode.Decoder TrainTable
 timetableDecoder =
-    Json.Decode.field "connections"
+    Json.Decode.field "stationboard"
         (Json.Decode.list
-            (Json.Decode.map4 Train
-                (Json.Decode.field "time" Json.Decode.string)
-                (Json.Decode.maybe (Json.Decode.field "dep_delay" Json.Decode.string))
-                (Json.Decode.field "number" Json.Decode.string)
-                (Json.Decode.field "terminal" (Json.Decode.field "name" Json.Decode.string))
+            (Json.Decode.map5 Train
+                (Json.Decode.field "name" Json.Decode.string)
+                (Json.Decode.field "stop" (Json.Decode.field "departure" Json.Decode.string))
+                (Json.Decode.field "to" Json.Decode.string)
+                (Json.Decode.field "stop" (Json.Decode.field "platform" Json.Decode.string))
+                (Json.Decode.maybe (Json.Decode.field "stop" (Json.Decode.field "delay" Json.Decode.string)))
             )
         )
