@@ -27,6 +27,10 @@ import Http
 import Json.Decode
 
 
+chosenStation =
+    "Olten"
+
+
 
 -- MAIN
 
@@ -48,7 +52,7 @@ type alias Train =
     { abbreviation : String
     , number : Maybe String
     , departureTime : String
-    , destination : String
+    , destinations : List String
     , track : String
     , notes : Maybe String
     }
@@ -149,8 +153,11 @@ toRow t =
         , td [ class "time" ]
             [ formatTime t.departureTime
             ]
-        , td [ class "destination" ]
-            [ text t.destination
+        , td [ class "destinations" ]
+            [ formatDestinations
+                (subsampleDestinations
+                    (filterDestinations t.destinations)
+                )
             ]
         , td [ class "track" ]
             [ formatTrack t.track
@@ -195,6 +202,45 @@ sanitizeName abbreviation maybeNumber =
             abbreviation
 
 
+formatDestinations : List String -> Html msg
+formatDestinations destinations =
+    -- We want two nonbreaking spaces.
+    text (String.join "\u{00A0}\u{00A0}" destinations)
+
+
+subsampleDestinations : List String -> List String
+subsampleDestinations destinations =
+    -- We take the next two stations plus the final destination.
+    Maybe.map List.singleton (myLast destinations)
+        |> Maybe.withDefault []
+        |> (++) (List.take 2 destinations)
+
+
+filterDestinations : List String -> List String
+filterDestinations destinations =
+    -- Sometimes the station itself showed up on the destination
+    -- list. Also, some non-stops are not helping.
+    List.filter
+        (\place ->
+            place
+                /= chosenStation
+                && place
+                /= "Bahn-2000-Strecke"
+                && place
+                /= "Gotthard-Basistunnel"
+                && place
+                /= "Lötschberg-Basistunnel"
+                && place
+                /= "Simplontunnel"
+        )
+        destinations
+
+
+myLast : List a -> Maybe a
+myLast list =
+    List.reverse list |> List.head
+
+
 formatTrack : String -> Html msg
 formatTrack track =
     if String.endsWith "!" track then
@@ -237,10 +283,13 @@ getTimetable =
     Http.get
         { url =
             "https://timetable.search.ch/api/stationboard.json"
-                ++ "?stop=Olten"
+                ++ "?stop="
+                ++ chosenStation
                 ++ "&show_delays=1"
                 ++ "&show_trackchanges=1"
-                ++ "&show_tracks=1&limit=16"
+                ++ "&show_tracks=1"
+                ++ "&limit=16"
+                ++ "&show_subsequent_stops=1"
         , expect = Http.expectJson GotTimetable timetableDecoder
         }
 
@@ -255,8 +304,8 @@ timetableDecoder =
                     (Json.Decode.field "*L" Json.Decode.string)
                 )
                 (Json.Decode.field "time" Json.Decode.string)
-                (Json.Decode.field "terminal"
-                    (Json.Decode.field "name" Json.Decode.string)
+                (Json.Decode.field "subsequent_stops"
+                    (Json.Decode.list (Json.Decode.field "name" Json.Decode.string))
                 )
                 (Json.Decode.field "track" Json.Decode.string)
                 (Json.Decode.maybe
