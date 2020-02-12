@@ -25,6 +25,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
 import Json.Decode
+import Time exposing (..)
 
 
 chosenStation =
@@ -79,6 +80,7 @@ init _ =
 
 type Msg
     = GotTimetable (Result Http.Error TrainTable)
+    | Tick Time.Posix
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -92,6 +94,9 @@ update msg model =
                 Err err ->
                     ( Failure (Debug.toString err), Cmd.none )
 
+        Tick _ ->
+            ( model, getTimetable )
+
 
 
 -- SUBSCRIPTIONS
@@ -99,7 +104,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Time.every (1000 * 60) Tick
 
 
 
